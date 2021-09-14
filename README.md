@@ -15,6 +15,7 @@ Similarly, given values along two dimensions, (`xvals`) and (`yvals`), you can c
 ```
 binsGrid, heights2d = ash.ash2d(xvals, yvals, nbins, nshifts)
 ```
+Optional arguments include `weights`, which defaults to equally-weighted samples, and `padVals` which can be set to `True` to pad arrays with the first and last histogram values rather than zeroes. 
 These can then be plotted, e.g.
 ```
 import matplotlib.pyplot as plt
