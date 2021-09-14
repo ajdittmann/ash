@@ -28,6 +28,9 @@ plt.pcolormesh(binsGrid[0], binsGrid[1], heights2d)
 Sampling from a mixture of three Gaussian distributions:
 ![Gaussian Mixture](https://github.com/ajdittmann/ash/blob/master/exampleGaussianMixture.png)
 
+Sampling from a mixture of two 2D Gaussian distributions:
+![2D Gaussian Mixture](https://github.com/ajdittmann/ash/blob/master/example2DGaussianMixture.png)
+
 ### References
 * [Scott 1985](http://www.stat.cmu.edu/~rnugent/PCMI2016/papers/ScottASH.pdf)
 * [Anderson et al. 2016](https://pubs.acs.org/doi/10.1021/acs.chemmater.6b03430)
@@ -38,9 +41,10 @@ git clone https://github.com/ajdittmann/ash.git
 `.
 Then, install with
 `
-python setup.py install
+pip install -e .
 `
 or 
 `
-pip install -e .
-`.
+python setup.py install
+`
+.
