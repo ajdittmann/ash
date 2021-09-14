@@ -23,7 +23,7 @@ plt.plot(bins, heights)
 ...
 plt.pcolormesh(binsGrid[0], binsGrid[1], heights2d)
 ```
-### ASH in action 
+### ash in action 
 Sampling from a mixture of three Gaussian distributions:
 ![Gaussian Mixture](https://github.com/ajdittmann/ash/blob/master/exampleGaussianMixture.png)
 
