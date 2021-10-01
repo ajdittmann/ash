@@ -1,81 +1,75 @@
 import numpy as np
 
-def ash1d(vals, nbins=20, nshifts=10, weights=None, padVals=False):
+
+def ash1d(vals, nbins=20, nshifts=10, weights=None):
   vmax = np.max(vals)
   vmin = np.min(vals)
-  dx = (vmax-vmin)/nbins
+  dx = (vmax-vmin)/(nbins)
   ds = dx/nshifts
 
-  ashgrid = np.linspace(vmin, vmax, (nbins+2)*nshifts)
+  #need to make sure these are correct
+  ashgrid = np.linspace(vmin+ds/2, vmax-ds/2, nbins*(nshifts))
+
   ashden = np.zeros(ashgrid.shape)
   for i in range(nshifts):
-    hist_range = (vmin + i*ds, vmax + i*ds - dx)
-    hist, edges = np.histogram(vals, nbins+1, range=hist_range, density=False, weights = weights)
-    histdat = np.repeat(hist, nshifts, axis=0)
-    if (padVals):
-      histdat = np.append( np.ones(i)*hist[0], histdat, axis=0)
-      histdat = np.append( histdat, np.ones(nshifts-i)*hist[-1], axis=0)
-    else:
-      histdat = np.append( np.zeros(i), histdat, axis=0)
-      histdat = np.append( histdat, np.zeros(nshifts-i), axis=0)
-    ashden += histdat/np.sum(histdat*(vmax - vmin - dx)/((nbins+1)*nshifts))
-  ashden = ashden/nshifts
-  ashind = np.where(ashden>0)
-  ashgrid = ashgrid[ashind]
-  ashden = ashden[ashind]
+    bins = vmin + dx*(1+np.arange(nbins-1)) + ds*(i - nshifts + 1) + ds*(nshifts//2)
+    bins = np.append(vmin, bins)
+    bins = np.append(bins, vmax)
+    hist, edges = np.histogram(vals, bins, density=True, weights = weights)
+    repeats = np.ones(nbins, dtype=int)*nshifts
+    repeats[0] = i + 1 + nshifts//2
+    repeats[-1] = nshifts*2 - i - 1 - nshifts//2
+    histdat = np.repeat(hist, repeats, axis=0)
+    ashden += histdat
+  ashden /= (nshifts)
   return ashgrid, ashden
 
 
-def ash2d(xvals, yvals, nbins=20, nshifts=10, weights=None, padVals=False):
+def ash2d(xvals, yvals, nbins=20, nshifts=10, weights=None):
   xmax = np.max(xvals)
   xmin = np.min(xvals)
-  dx = (xmax-xmin)/nbins
-  dsx = dx/nshifts
+  dx = (xmax-xmin)/(nbins)
+  dsx = (xmax-xmin)/(nshifts*nbins)
+
 
   ymax = np.max(yvals)
   ymin = np.min(yvals)
-  dy = (ymax-ymin)/nbins
-  dsy = dy/nshifts
+  dy = (ymax-ymin)/(nbins)
+  dsy = dy/(nshifts)
 
-  nsg = (nbins+2)*nshifts
-  xgrid = np.linspace(xmin, xmax, (nbins+2)*nshifts)
-  ygrid = np.linspace(ymin, ymax, (nbins+2)*nshifts)
+  nsg = (nbins)*(nshifts)
+
+  xgrid = np.linspace(xmin+dsx/2, xmax-dsx/2, nbins*nshifts)
+  ygrid = np.linspace(ymin+dsy/2, ymax-dsy/2, nbins*nshifts)
   ashmesh = np.meshgrid(xgrid, ygrid)
   ashmesh[0] = ashmesh[0].T
   ashmesh[1] = ashmesh[1].T
   ashden = np.zeros((nsg, nsg))
 
-  for i in range(nshifts):  #x loop
-    for j in range(nshifts):  #y loop
-      histrange = ( (xmin + i*dsx, xmax + i*dsx -dx), (ymin + j*dsy, ymax + j*dsy - dy) )
-      hist, xedge, yedge = np.histogram2d(xvals, yvals, nbins+1, range=histrange, density=False, weights=weights)
-      histdat = np.repeat(hist, nshifts, axis=1)
-      histdat = np.repeat(histdat, nshifts, axis=0)
-      if (padVals):
-        appx1 = np.ones((i,(nbins+1)*nshifts))
-        appx2 = np.ones((nshifts - i,(nbins+1)*nshifts))
-        appy1 = np.ones(((nbins+2)*nshifts, j))
-        appy2 = np.ones(((nbins+2)*nshifts, nshifts-j))
-        for k in range(i):
-          appx1[k,:] = histdat[0,:]
-        for k in range(nshifts-i):
-          appx2[k,:] = histdat[-1,:]
-        histdat = np.append( appx1, histdat, axis=0)
-        histdat = np.append( histdat, appx2, axis=0)
-        for k in range(j):
-          appy1[:,k] = histdat[:,0]
-        for k in range(nshifts-j):
-          appy2[:,k] = histdat[:,-1]
-        histdat = np.append( appy1, histdat, axis=1)
-        histdat = np.append( histdat, appy2, axis=1)
-      else:
-        histdat = np.append( np.zeros(((nbins+1)*nshifts,j)), histdat, axis=1)
-        histdat = np.append( histdat, np.zeros(( (nbins+1)*nshifts,nshifts-j)), axis=1)
-        histdat = np.append( np.zeros((i,(nbins+2)*nshifts)), histdat, axis=0)
-        histdat = np.append( histdat, np.zeros((nshifts-i, (nbins+2)*nshifts)), axis=0)
-      ashden += histdat/np.sum(histdat*(xmax - xmin - dx)*(ymax - ymin - dy)/((nbins+1)*nshifts)**2)
+  for i in range(nshifts): #x loop
+    xbins = xmin + dx*(1+np.arange(nbins-1)) + dsx*(i - nshifts + 1) + dsx*(nshifts//2)
+    xbins = np.append(xmin, xbins)
+    xbins = np.append(xbins, xmax)
+    for j in range(nshifts): #y loop
+      ybins = ymin + dy*(1+np.arange(nbins-1)) + dsy*(j - nshifts + 1) + dsy*(nshifts//2)
+      ybins = np.append(ymin, ybins)
+      ybins = np.append(ybins, ymax)
 
-  ashden /= nshifts
+      hist, xedge, yedge = np.histogram2d(xvals, yvals, bins=(xbins, ybins), density=True, weights=weights)
+      hist[(np.isfinite(hist)==0)]=0.0
+
+      xreps = np.ones(nbins, dtype=int)*nshifts
+      xreps[0] = i + 1 + nshifts//2
+      xreps[-1] = nshifts*2 - i - 1 - nshifts//2
+
+      yreps = np.ones(nbins, dtype=int)*nshifts
+      yreps[0] = j + 1 + nshifts//2
+      yreps[-1] = nshifts*2 - j - 1 - nshifts//2
+
+      histdat = np.repeat(hist, xreps, axis=0)
+      histdat = np.repeat(histdat, yreps, axis=1)
+
+      ashden += histdat
+  ashden /= nshifts**2
 
   return ashmesh, ashden
-
