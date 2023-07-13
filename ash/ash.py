@@ -1,27 +1,31 @@
 import numpy as np
 
 
-def ash1d(vals, nbins=20, nshifts=10, weights=None):
+def ash1d(vals, nbins=20, nshifts=10, weights=None, periodic=False):
   vmax = np.max(vals)
   vmin = np.min(vals)
   L = vmax-vmin
   h = L/(nbins)
   d = h/nshifts
 
-  kgrid = np.linspace(vmin, vmax, nbins*nshifts + 1)
+  N = nbins*nshifts
+  kgrid = np.linspace(vmin, vmax, N + 1)
   khist, edges = np.histogram(vals, bins=kgrid, weights=weights)
-  values = np.zeros(nbins*nshifts)
-  for k in range(nbins*nshifts):
+  values = np.zeros(N)
+  for k in range(N):
     for i in range(1-nshifts, nshifts):
-      if k+i<0: value = 0
-      elif k+i>=nbins*nshifts: value = 0
-      else: value = khist[k+i]
+      if periodic:
+        value = khist[(k+i)%N]
+      else:
+        if k+i<0: value = 0
+        elif k+i>=N: value = 0
+        else: value = khist[k+i]
       values[k] += value*(1 - np.abs(i)/nshifts)
 
   values = values*nshifts/(h*np.sum(values))
   return kgrid[:-1]+0.5*d, values
 
-def ash2d(xvals, yvals, nbins=20, nshifts=10, weights=None):
+def ash2d(xvals, yvals, nbins=20, nshifts=10, weights=None, periodic=False):
   xmax = np.max(xvals)
   xmin = np.min(xvals)
   hx = (xmax-xmin)/nbins
@@ -32,19 +36,22 @@ def ash2d(xvals, yvals, nbins=20, nshifts=10, weights=None):
   hy = (ymax-ymin)/nbins
   dy = hy/(nshifts)
 
-  xgrid = np.linspace(xmin, xmax, nbins*nshifts + 1)
-  ygrid = np.linspace(ymin, ymax, nbins*nshifts + 1)
+  N = nbins*nshifts
+  xgrid = np.linspace(xmin, xmax, N + 1)
+  ygrid = np.linspace(ymin, ymax, N + 1)
 
   ashmesh = np.meshgrid(xgrid[:-1]+dx*0.5, ygrid[:-1] + dy*0.5)
 
   xyhist, xedges, yedges = np.histogram2d(xvals,yvals, bins=(xgrid, ygrid), weights=weights)
-  values = np.zeros((nbins*nshifts, nbins*nshifts))
-  for kx in range(nbins*nshifts):
-    for ky in range(nbins*nshifts):
+  values = np.zeros((N, N))
+  for kx in range(N):
+    for ky in range(N):
       for ix in range(1-nshifts, nshifts):
         for iy in range(1-nshifts, nshifts):
           value = 0.0
-          if (ix+kx >= 0) and (iy+ky >= 0) and (ix+kx < nshifts*nbins) and (iy+ky < nshifts*nbins): value = xyhist[kx+ix, ky+iy]
+          if periodic: value = xyhist[(kx+ix)%N,(ky+iy)%N]
+          else:
+            if (ix+kx >= 0) and (iy+ky >= 0) and (ix+kx < N) and (iy+ky < N): value = xyhist[kx+ix, ky+iy]
           values[kx,ky] += value*(1 - np.abs(ix)/nshifts)*(1 - np.abs(iy)/nshifts)
 
   values = values/(dx*dy*np.sum(values))
