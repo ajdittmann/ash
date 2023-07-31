@@ -15,7 +15,8 @@ Similarly, given values along two dimensions, (`xvals`) and (`yvals`), you can c
 ```
 binsGrid, heights2d = ash.ash2d(xvals, yvals, nbins, nshifts)
 ```
-Weights can be passed using the optional `weights` argument, in the case where samples are unequally weighted (the default assumption). The first and last histogram bin vary in width so that the first and last bin edge always have the same locations.
+By default, the samples are assumed to be weighted equally. If not, weights for each sample can be passed using the optional `weights` argument. If the data are peridic (such as values of an angle from 0 to 2&pi), periodic boundary conditions can be specified by setting `periodic=True`. 
+The upper and lower limits for the histograms can be specified using the `range` argument to `ash1d` (e.g. `range=(xmin, xmax)` or the `xrange` and `yrange` arguments to ash2d. Otherwise, the minimum and maximum data values will be used. 
 
 Once computed, ASHs are straightforward to plot, e.g.
 ```

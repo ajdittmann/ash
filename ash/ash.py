@@ -1,9 +1,13 @@
 import numpy as np
 
 
-def ash1d(vals, nbins=20, nshifts=10, weights=None, periodic=False):
-  vmax = np.max(vals)
-  vmin = np.min(vals)
+def ash1d(vals, nbins=20, nshifts=10, weights=None, periodic=False, range=None):
+  if range is None:
+    vmax = np.max(vals)
+    vmin = np.min(vals)
+  else:
+    vmax = range[1]
+    vmin = range[0]
   L = vmax-vmin
   h = L/(nbins)
   d = h/nshifts
@@ -12,8 +16,8 @@ def ash1d(vals, nbins=20, nshifts=10, weights=None, periodic=False):
   kgrid = np.linspace(vmin, vmax, N + 1)
   khist, edges = np.histogram(vals, bins=kgrid, weights=weights)
   values = np.zeros(N)
-  for k in range(N):
-    for i in range(1-nshifts, nshifts):
+  for k in np.arange(N):
+    for i in np.arange(1-nshifts, nshifts):
       if periodic:
         value = khist[(k+i)%N]
       else:
@@ -25,14 +29,22 @@ def ash1d(vals, nbins=20, nshifts=10, weights=None, periodic=False):
   values = values*nshifts/(h*np.sum(values))
   return kgrid[:-1]+0.5*d, values
 
-def ash2d(xvals, yvals, nbins=20, nshifts=10, weights=None, periodic=False):
-  xmax = np.max(xvals)
-  xmin = np.min(xvals)
+def ash2d(xvals, yvals, nbins=20, nshifts=10, weights=None, periodic=False, xrange=None, yrange=None):
+  if xrange is not None:
+    xmax = xrange[1]
+    xmin = xrange[0]
+  else:
+    xmax = np.max(xvals)
+    xmin = np.min(xvals)
   hx = (xmax-xmin)/nbins
   dx = hx/nshifts
 
-  ymax = np.max(yvals)
-  ymin = np.min(yvals)
+  if yrange is not None:
+    ymax = yrange[1]
+    ymin = yrange[0]
+  else:
+    ymax = np.max(yvals)
+    ymin = np.min(yvals)
   hy = (ymax-ymin)/nbins
   dy = hy/(nshifts)
 
